@@ -1,0 +1,213 @@
+1. SELECT statement
+	SELECT * FROM actor; # all column
+	SELECT first_name, last_name, email FROM customer;
+
+
+2. SELECT DISTINCT(column)
+	SELECT DISTINCT(name) FROM color_table; # queried only unique data
+	SELECT DISTINCT(rating) FROM film; # queried sort of rating PG, PG-13
+
+
+3. COUNT
+	# return the number of input rows
+	# apply to specific column
+	SELECT COUNT(name) FROM table; # count rows
+	SELECT COUNT(DISTINCT (name)) FROM table; # how many unique name in the column
+	
+	
+4. SELECT WHERE
+	# specify conditions on columns for the rows to be returned
+	# comparison operators
+	# = > < >= <= <> !=
+	# logical operators
+	# AND OR NOT
+	SELECT name,choice FROM table
+	WHERE name='David' AND choice='Red'; #string should be inside '____'
+	
+	# get the phone number for the customer who lives at '259 Ipoh Drive'
+	SELECT phone from address
+	WHERE adress = '259 Ipoh Drive';	
+
+	
+5. ORDER BY
+	# sorting data
+	# default ASC
+	# number => numerically, string => alphabetically
+	SELECT store_id,first_name,last_name FROM customer
+	ORDER BY store_id,first_name DESC; # order by store_id first, 
+				      # if still there is the same 
+				      # order by first_name	
+	
+	# aware for column which have the same name as SQL syntax
+
+
+6. LIMIT 
+	# limit number of rows returned for a query
+	SELECT * FROM payment
+	WHERE amount != 0.00
+	ORDER BY payment_date DESC
+	LIMIT 5; # only show 5 row upper
+	
+	# how much movie that can be watched if the length under 50 mins
+	SELECT COUNT(title) FROM film
+	WHERE length <= 50;
+
+
+7. BETWEEN
+	# value BETWEEN low AND high 
+	# value >= low and value <= high
+
+	# value NOT BETWEEN low AND high
+	# value < low and value > high
+	
+	SELECT * FROM payment
+	WHERE payment_date BETWEEN '2007-02-01' AND '2007-02-15'; # it includes time
+							# no hour after 2007-02-2015
+
+
+8. IN 
+	# inside list ('a','b','c') or connector
+	# count number of row in payment for specific value
+	SELECT COUNT(*) FROM payment
+	WHERE amount IN (0.99,1.98,1.99) # 0.99 or 1.98 or 1.99
+	# can input NOT IN
+
+9. LIKE and ILIKE
+	# pattern matching
+	# (%) sequence of character
+	# (_) Matches any single character
+	# for LIKE case matter
+	# for ILIKE case no matter
+	SELECT * FROM customer
+	WHERE first_name LIKE '_her%'; # queried data that start with 1 char plus her plus 
+				       # blablabla
+	
+
+10. GENERAL CHALLANGE 1
+	# how many payment transactions were greater than $5.00?
+	SELECT COUNT(*) FROM PAYMENT
+	WHERE amount>5;
+	
+	# how many actors have first name start with P?
+	SELECT COUNT(*) FROM actor
+	WHERE first_name LIKE 'P%';
+
+	# how many unique districts are our customers from
+	SELECT COUNT(DISTINCT(district)) from address;
+
+	# retrieve the list of names for those distinct district
+	SELECT DISTINCT(district) FROM address;
+	
+	# How many film have a rating of R and a replacement cost between $5 and $15
+	SELECT COUNT(title) FROM film
+	WHERE rating = 'R' AND replacement_cost BETWEEN 5 AND 15
+
+	# How many films have the word Truman in the title
+	SELECT COUNT(*) FROM film
+	WHERE title ILIKE '%TRUMAN%'
+
+
+11. AGGREGATE FUNCTIONS
+	# allow us to aggregate data and apply functions
+	# to understand data distribution
+	# idea behind an aggregate function is to take multiple inputs
+	# and return single output
+	# AVG() COUNT() MAX() MIN() SUM() ROUND()
+	# it only work for SELECT clause and HAVING clause
+	
+	SELECT MIN(replacement_cost) FROM film;
+	# SELECT MAX(replacement_cost),film_id FROM film; not work because it returns only
+	# one value, if we want to call another column use GROUP BY
+	
+	SELECT MAX(replacement_cost),MIN(replacement_cost) FROM film;
+	SELECT ROUND(AVG(replacement_cost),2) FROM film; # so that 2 digits after comma
+	
+	
+12. GROUP BY
+	# allows us to aggregate columns per some category
+	# categorical column to GROUP BY / not-continuous
+	# In the SELECT statement, columns must either have an
+	# aggregate function or be in the GROUP BY call	
+	# WHERE clause happens before GROUP BY clause process
+	# if want to ORDER BY aggregate, make sure referencing entire function
+	# customer_id is categorical, although it was in number form
+	
+	# checking which customer spend so much money
+	SELECT customer_id, SUM(amount) FROM payment
+	GROUP BY customer_id
+	ORDER BY SUM(amount) DESC
+	LIMIT 5;
+
+	# checking total amount spent per staff per customer
+	# for ORDER BY usually the less variance comes first
+	SELECT staff_id, customer_id, SUM(amount) FROM payment
+	GROUP BY staff_id, customer_id
+	ORDER BY staff_id, customer_id
+
+	# extract date from payment date
+	SELECT DATE(payment_date),SUM(amount) FROM payment;
+	GROUP BY DATE(payment_date)
+	ORDER BY SUM(amount) DESC;
+
+	# how many payments did each staff member handle
+	SELECT staff_id, COUNT(amount) from PAYMENT
+	GROUP BY staff_id
+	ORDER BY COUNT(payment) DESC
+	LIMIT 1;
+
+	# what is the average replacement cost per MPAA rating
+	SELECT rating, ROUND(AVG(replacement_cost)) FROM film
+	GROUP BY rating
+	ORDER BY ROUND(AVG(replacement_cost))
+	LIMIT 1;
+
+	# what are the customer ids of the top 5 customers by total spend
+	SELECT customer_id, SUM(amount) FROM payment
+	GROUP BY customer_id
+	ORDER BY SUM(amount) DESC
+	LIMIT 5;
+
+ 
+13. HAVING 
+	allows us to filter after an aggregation has already taken place
+	
+	# check customer which is not 184,87,477 who has total spent above 100
+	SELECT customer_id,SUM(amount) FROM payment
+	WHERE customer_id NOT IN (184,87,477)
+	GROUP BY customer_id
+	HAVING SUM(amount)>100
+	ORDER BY customer_id
+
+	# what customer are having 40 or more transaction payments
+	SELECT customer_id, COUNT(amount) FROM payment
+	GROUP BY customer_id
+	HAVING COUNT(amount) >= 40;
+
+	# who is the customer who have spent more than $100 in payment transaction
+	# with staff_id 2
+	SELECT customer_id,SUM(amount) FROM customer
+	WHERE staff_id = 2
+	GROUP BY customer_id
+	HAVING SUM(amount) > 100
+
+
+14. ASSESSMENT TEST
+	# customer who have spent at least $110 with staff id 2
+	SELECT customer_id,SUM(amount) FROM payment
+	WHERE staff_id = 2
+	GROUP BY customer_id
+	HAVING SUM(amount) >= 110
+
+	# how many films begin with 'J'
+	SELECT COUNT(title) FROM film
+	WHERE title ILIKE 'J%'
+
+	# what customer has the highest ID number whose name start E
+	# and address id lower than 500
+	SELECT first_name||' '||last_name, address_id FROM customer
+	WHERE first_name ILIKE 'E%' AND address_id < 500
+	ORDER BY customer_id DESC
+	LIMIT 1 
+
+
+
