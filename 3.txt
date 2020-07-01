@@ -1,0 +1,283 @@
+1. DATA TYPES
+	# boolean TRUE or FALSE
+	# character CHAR, VARCHAR, TEXT
+	# numeric INTEGER, FLOATING-POINT, SERIAL
+	# temporal DATE, TIME, TIMESTAMP, INTERVAL
+	# UUID
+	# array
+	# JSON
+	# Hstore key-value pair
+	# small 2 bytes, normal 4 byte, big 8 byte
+	
+2. PRIMARY KEY and FOREIGN KEY
+	# PK is column/s used to identify a row uniquely for one table
+	# PK good for joining table together
+	# SERIAL datatype used for creating unique integer
+	# FK is a filed/s in a table uniquely identifies row in another table
+	# FK placed in child table who refer to parent table PK
+	
+	
+3. CONSTRAINTS
+	# rules enforced on the data column on table
+	# prevent invalid data
+	# ensure accuracy and reliability
+	# column CONSTRAINT and table CONSTRAINT
+	
+	# column constraint
+	NOT NULL
+	UNIQUE
+	PRIMARY KEY
+	FOREIGN KEY
+	CHECK
+	EXCLUSION
+	
+	# table constraint
+	CHECK()
+	REFERENCES # stored value in the column must exist in column from another table
+	UNQUE(column_list)
+	PRIMARY KEY(column_list)
+	
+	
+4. CREATE table
+	# general syntax
+	CREATE TABLE table_name(
+	column_name TYPE column_constraint,
+	column_name TYPE column_constraint,
+	table_constraint table_constraint # table level constraint
+	) INHERITS existing_table_name # relationship to another table
+
+	# create database named learning
+	CREATE TABLE account(
+	user_id SERIAL PRIMARY KEY, # SERIAL only for PK
+	username VARCHAR(50) UNIQUE NOT NULL,
+	password VARCHAR(50) NOT NULL,
+	email VARCHAR(250) UNIQUE NOT NULL,
+	created_on TIMESTAMP NOT NULL, # check created time
+	last_login TIMESTAMP # no constraint
+	)
+	
+	CREATE TABLE job(
+	job_id SERIAL PRIMARY KEY,
+	jobname VARCHAR(200) UNIQUE NOT NULL
+	)
+
+	CREATE TABLE account_job(
+	user_id INTEGER REFERENCES account(user_id), # FOREIGN KEY
+	job_id INTEGER REFERENCES job(job_id),
+	hire_date TIMESTAMP
+	)
+
+
+5. INSERT INTO() VALUES()
+	# INSERT allow to add in rows to a table
+	# general syntax
+	INSERT INTO table(column1,column2,..)
+	VALUES
+	(value1,value2,...),
+	(value1,value2,...)
+
+	# INSERT from another table
+	INSERT INTO table(column1,column2,...)
+	SELECT column1,column2
+	FROM another_table
+	WHERE condition
+
+	INSERT INTO account(username,password,email,created_on)
+	VALUES
+	('Jose','password','jose@mail.com',CURRENT_TIMESTAMPS)
+
+	INSERT INTO job(jobname)
+	VALUES 
+	('Astronaut'),
+	('President'),
+	('Ministry of Education'),
+	('Vice President')
+
+	INSERT INTO account_job(user_id,job_id,hire_date)
+	VALUES 
+	(1,1,CURRENT_TIMESTAMP) # FK should be input
+
+
+6. UPDATE
+	# general syntax
+	UODATE table
+	SET column1 = value1,
+	column2 = value2,...
+	WHERE # optional
+	condition
+
+	# set based on another column
+	UPDATE account
+	SET last_login = created_on
+
+	# another table value
+	UPDATE tableA
+	SET original_col = TableB.new_col
+	FROM tableB
+	WHERE tableA.id = TableB.id # column match
+
+	# return affected rows
+	UPDATE account
+	SET last_login = created_on
+	RETURNING account_id,last_login
+	
+
+
+	# UPDATE account
+	UPDATE account
+	SET last_login = CURRENT_TIMESTAMP
+	
+	# UPDATE hire_date based on account table created_on
+	UPDATE account_job
+	SET hire_date = account.created_on
+	FROM account
+	WHERE account_job.user_id = account.user_id
+	
+	# 
+	UPDATE account
+	SET last_login = CURRENT_TIMESTAMP
+	RETURNING email,created_on,last_login # no used SELECT * check
+
+
+7. DELETE
+	# remove rows from the table, not column
+	DELETE FROM table
+	WHERE row_id = 1
+
+	# remove rows based on their presence in other tables
+	DELETE FROM tableA
+	USING tableB
+	WHERE tableA.id = tableB.id # match column
+	
+	# delete all from table
+	DELETE FROM table
+	
+	DELETE FROM job # if it is not complete, all rows will be deleted
+	WHERE jobname = 'Cowboy' 
+	RETURNING job_id,jobname # showing deleted data
+	 
+	
+8. ALTER table
+	# allow us for changes to an existing table structure, such as:
+	# adding, dropping, or renaming column
+	# changing column data type
+	# set DEFAULT values for a column
+	# add CHECK constraints
+	# Rename table
+	
+	# adding column
+	ALTER TABLE table_name
+	ADD 
+	COLUMN new_col TYPE
+	
+	# removing column
+	ALTER TABLE table_name
+	DROP COLUMN col_name
+	
+	# alter constraints
+	ALTER TABLE table_name
+	ALTER COLUMN col_name
+	SET DEFAULT value 
+	
+	ALTER TABLE table_name
+	ALTER COLUMN col_name
+	DROP DEFAULT
+	
+	ALTER TABLE table_name
+	ALTER COLUMN col_name
+	SET NOT NULL
+
+	ALTER TABLE table_name
+	ALTER COLUMN col_name
+	DROP NOT NULL
+
+	ALTER TABLE table_name
+	ALTER COLUMN col_name
+	ADD CONSTRAINT constraint_name
+	
+	
+	# working on pgadmin
+	CREATE TABLE information(
+	info_id SERIAL PRIMARY KEY,
+	title VARCHAR(500) NOT NULL,
+	person VARCHAR(50) NOT NULL UNIQUE
+	)
+
+	ALTER TABLE information
+	RENAME TO new_info
+
+	ALTER TABLE new_info
+	RENAME COLUMN person TO people
+
+	INSERT INTO new_info(title)
+	VALUES
+	('some new title')
+	
+	ALTER TABLE new_info
+	ALTER COLUMN people DROP NOT NULL
+
+	
+9. DROP
+	# allow us to remove column from the table completely, not only row
+	# included indexes and constraints
+	# general syntax
+	ALTER TABLE table_name
+	DROP COLUMN col_name
+	
+	# remove all dependencies
+	ALTER TABLE table_name
+	DROP COLUMN col_name CASCADE
+	
+	# check for existence to avoid error
+	ALTER TABLE table_name
+	DROP COLUMN IF EXISTS col_name
+	
+	# drop multiple column
+	ALTER TABLE table_name
+	DROP COLUMN col_one
+	DROP COLUMN col_two
+
+	
+10. CHECK CONSTRAINT
+	# allow us to check constraint allows us to create more customized constraint
+	# that adhere a certain condition
+	# example: make sure all inserted integer values fall below threshold
+	# general syntax
+	CREATE TABLE example(
+	ex_id SERIAL PRIMARY KEY,
+	age SMALLINT CHECK(age>21),
+	parent_age SMALLINT CHECK(parent_age>age)
+	)
+
+	# employee table
+	CREATE TABLE employees(
+	emp_id SERIAL PRIMARY KEY,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	birthdate DATE CHECK(birthdate > '1900-01-01'),
+	hire_date DATE CHECK(hire_date > birthdate),
+	salary INTEGER CHECK (salary>0)
+	)
+
+	INSERT INTO employees(
+	first_name, last_name, birthdate, hire_date, salary
+	)
+	VALUES
+	('Jose','Portilla','1989-11-03','2010-01-01',100
+	)
+	# for some failed input data SERIAL will SKIP
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+

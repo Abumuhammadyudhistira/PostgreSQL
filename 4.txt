@@ -1,0 +1,200 @@
+1. CASE
+	# two ways there are general CASE or CASE expression
+	# general CASE syntax
+	# become new column
+	CASE 
+		WHEN condition1 THEN result1
+		WHEN condition2 THEN result2
+		...
+		...
+		ELSE some_other_result
+	END AS column_name
+	
+	# CASE expression syntax
+	CASE expression
+		WHEN value1 THEN result1 # checking value instead
+		WHEN value2 THEN result2
+		...
+		...
+		ELSE some_other_result
+	END AS column_name
+
+	# pgadmin realistic pracical test with general CASE
+	SELECT customer_id
+	CASE 
+		WHEN (customer_id<=100) THEN 'Premium'
+		WHEN (customer_id BETWEEN 100 AND 200) THEN 'Plus'
+		ELSE 'Normal'
+	END AS customer_class
+	FROM customer
+		
+
+	# pgadmin realistic practical test with CASE expression
+	SELECT customer_id,
+	CASE customer_id	# expression
+		WHEN 2 THEN 'Winner'		# based on expression only
+		WHEN 5 THEN 'Second Place'
+		ELSE 'Normal'	
+	END AS raffle_results
+	FROM customer
+
+
+	# rental_rate
+	SELECT rental_rate
+	CASE rental_rate
+		WHEN 0.99 THEN 1
+		ELSE 0
+	END
+	FROM film
+	
+	# combine it with aggregate function
+	SELECT
+	SUM(CASE rental_rate # SUM count for 1
+		WHEN 0.99 THEN 1
+		ELSE 0
+	END) AS bargains,
+	SUM(CASE rental_rate
+		WHEN 2.99 THEN 1
+		ELSE 0
+	END) AS regular,
+	SUM(CASE rental_rate
+		WHEN 4.99 THEN 1
+		ELSE 0
+	END) AS premium
+	FROM film
+
+
+	# CASE challenge
+	# we want to know and compare the various amounts of films we have per
+	# movie rating
+	SELECT
+	SUM(CASE rating 
+		WHEN 'R' THEN 1
+		ELSE 0
+	END) AS r,
+	SUM(CASE rating
+		WHEN 'PG' THEN 1
+		ELSE 0
+	END) AS pg,
+	SUM(CASE rating
+		WHEN 'PG-13' THEN 1
+		ELSE 0
+	END) AS pg13
+	FROM film
+
+
+2. COALESCE
+	# accept unlimited number of arguments
+	# returns the first argument that is not null
+	# if all arguments are null, return null
+	COALESCE(arg1,arg2,...,argn)
+
+	# good for querying a table contains null values and substitute it with another
+	# for calculation and other process involves not NOT NULL constraint
+	# is is recommended
+	# ex:
+	item	price	discount
+	A	100	20
+	B	300	null
+	C	200	10
+
+	# create column final = price-discount
+	SELECT item,price-column AS final # wont work for item B
+	FROM table
+	
+	# it should be
+	SELECT item,(price-COALESCE(discount,0)) #if discount = null, change by 0
+	AS final
+	FROM table
+
+
+3. CAST
+	# allow to convert from one data type into another
+	# syntax
+	SELECT CAST('5' AS INTEGER)  => SELECT '5'::INTEGER 
+	SELECT CAST(date AS TIMESTAMP)
+	
+	# length of integer character
+	SELECT CHAR_LENGTH(CAST(inventory_id AS VARCHAR)) FROM rental
+
+
+4. NULLIF
+	# takes in 2 input
+	# returns NULL if both are equal
+	# otherwise the first argument passed
+	NULLIF(arg1,arg2)
+	
+	# table depts
+	name		department
+	Vinton		A
+	Lauren		A
+	Claire		B
+	
+	# compare number of worker in dept A to dept B
+	SELECT 
+	SUM(CASE WHEN department = 'A' THEN 1 ELSE 0 END)/
+	SUM(CASE WHEN department = 'B' THEN 1 ELSE 0 END) 
+	AS ratio
+	FROM depts
+
+	# delete row
+	DELETE FROM depts
+	WHERE department = 'B'
+	
+	# because of it compare query cannot be executed for dept B = 0 (zero division)
+	# to avoid this thing make sure use NULLIF in denominator
+	# if denominator is zero, it will show NULL (not ERROR)
+	SELECT (
+	SUM(CASE WHEN department = 'A' THEN 1 ELSE 0 END)/
+	NULLIF(SUM(CASE WHEN department = 'B' THEN 1 ELSE 0 END),0) 
+	)
+	AS department_ratio
+	FROM depts
+
+
+5. VIEW
+	# why? you find specific combination for working over and over again
+	# to avoid perform the same query you can create VIEW
+	# ex: we always used join table
+	t1			t2		=>	t3
+	c1	c2 		c3	c4		c1	c2	c3	c4
+	
+	SELECT c1,c2,c3,c4 FROM t1 JOIN t2 ON t1.c1 = t2.c3 # we change it 
+	SELCT * FROM view # become like this
+	
+	# view can accessed as virtual table but don't store data
+	# view for customer and address table
+	CREATE VIEW customer_info AS # we named the table with customer_info
+	SELECT first_name,last_name,address, FROM customer
+	INNER JOIN address
+	ON customer.address_id = address.address_id
+	
+	# create or replace view
+	CREATE OR REPLACE VIEW table_view As
+	
+	# drop table view
+	DROP VIEW IF EXISTS table_view
+	
+	# rename table view
+	ALTER VIEW table_view_A RENAME TO table_view_B
+	
+	
+6. IMPORT and EXPORT
+	# import and export data from .csv
+	# not every outside data file will work
+	# no automated way within pgAdmin to create a table from .csv
+	# make sure no space in .csv file
+	
+	# create a table first with the name of column similar with csv column
+	# from table right click and import/export 
+	# create path
+	# format, HEADER, Delimiter, Quote
+	
+	
+
+
+
+
+
+
+
