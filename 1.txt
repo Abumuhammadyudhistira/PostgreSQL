@@ -39,6 +39,7 @@
 				      # order by first_name	
 	
 	# aware for column which have the same name as SQL syntax
+	# for date datatype ASC order will be from the older to the newest
 
 
 6. LIMIT 
@@ -131,6 +132,7 @@
 	# WHERE clause happens before GROUP BY clause process
 	# if want to ORDER BY aggregate, make sure referencing entire function
 	# customer_id is categorical, although it was in number form
+	# for date datatype you cannot use SUM() and AVG(), only MAX() and MIN()
 	
 	# checking which customer spend so much money
 	SELECT customer_id, SUM(amount) FROM payment
