@@ -1,0 +1,289 @@
+1. CTE
+	# Common table expressions
+	# consists of 2 part
+	# first part defines the name of the CTE
+	# second part defines a select statement that 
+	# populates the expressions with rows 
+
+	WITH cte_rental AS (
+    		SELECT 	staff_id,
+        		COUNT(rental_id) rental_count
+    		FROM   rental
+    		GROUP  BY staff_id
+		)
+
+	SELECT 	s.staff_id,
+    		first_name,
+    		last_name,
+    		rental_count
+	FROM staff s
+    	INNER JOIN cte_rental USING (staff_id);
+
+	# USING requires the names of the columns in both tables to be identical
+
+
+	# using CTE with windows function
+	WITH cte_film AS  (
+    		SELECT 	film_id,
+        		title,
+        		rating,
+        		length,
+        		RANK() OVER (
+            			PARTITION BY rating
+            			ORDER BY length DESC) 
+        		length_rank
+    		FROM 
+        	film
+		)
+	SELECT *
+	FROM cte_film
+	WHERE length_rank = 1; 
+	# Improve the readability of complex queries. 
+	# You use CTEs to organize complex queries in a more organized 
+	# and readable manner.
+
+	WITH topsales2003 AS (
+    SELECT 
+        salesRepEmployeeNumber employeeNumber,
+        SUM(quantityOrdered * priceEach) sales
+    FROM
+        orders
+            INNER JOIN
+        orderdetails USING (orderNumber)
+            INNER JOIN
+        customers USING (customerNumber)
+    WHERE
+        YEAR(shippedDate) = 2003
+            AND status = 'Shipped'
+    GROUP BY salesRepEmployeeNumber
+    ORDER BY sales DESC
+    LIMIT 5
+)
+SELECT 
+    employeeNumber, 
+    firstName, 
+    lastName, 
+    sales
+FROM
+    employees
+        JOIN
+    topsales2003 USING (employeeNumber);
+Code language: SQL 
+
+
+	WITH salesrep AS (
+    SELECT 
+        employeeNumber,
+        CONCAT(firstName, ' ', lastName) AS salesrepName
+    FROM
+        employees
+    WHERE
+        jobTitle = 'Sales Rep'
+),
+customer_salesrep AS (
+    SELECT 
+        customerName, salesrepName
+    FROM
+        customers
+            INNER JOIN
+        salesrep ON employeeNumber = salesrepEmployeeNumber
+)
+SELECT 
+    *
+FROM
+    customer_salesrep
+ORDER BY customerName;
+
+	# First, a WITH clause can be used at the beginning 
+	# of SELECT, UPDATE, and DELETE statements
+
+	# Second, a WITH clause can be used at the beginning 
+	# of a subquery or a derived table subquery
+
+	SELECT ... WHERE id IN (WITH ... SELECT ...);
+
+	SELECT * FROM (WITH ... SELECT ...) AS derived_table;
+
+	# Third, a WITH clause can be used immediately preceding 
+	# SELECT of the statements that include a SELECT clause
+
+
+
+2. AGGREGATE FUNCTION ADVANCED
+
+	Aggregate function	Description
+	AVG()	Return the average of non-NULL values.
+	BIT_AND()	Return bitwise AND.
+	BIT_OR()	Return bitwise OR.
+	BIT_XOR()	Return bitwise XOR.
+	COUNT()	Return the number of rows in a group, including rows with NULL values.
+	GROUP_CONCAT()	Return a concatenated string.
+	JSON_ARRAYAGG()	Return result set as a single JSON array.
+	JSON_OBJECTAGG()	Return result set as a single JSON object.
+	MAX()	Return the highest value (maximum) in a set of non-NULL values.
+	MIN()	Return the lowest value (minimum) in a set of non-NULL values.
+	STDEV()	Return the population standard deviation.
+	STDDEV_POP()	Return the population standard deviation.
+	STDDEV_SAMP()	Return the sample standard deviation.
+	SUM()	Return the summation of all non-NULL values a set.
+	VAR_POP()	Return the population standard variance.
+	VARP_SAM()	Return the sample variance.
+	VARIANCE()	Return the population standard variance.
+
+3. WINDOWS FUNCTION
+
+	# A window function performs a calculation across a set of table rows that are 
+	# somehow related to the current row
+
+	# example of running total
+	SELECT 	duration_seconds,
+       		SUM(duration_seconds) OVER (ORDER BY start_time) AS running_total
+  	FROM tutorial.dc_bikeshare_q1_2012
+
+	# You can see that the above query creates an aggregation 
+	# (running_total) without using GROUP BY
+
+	# 
+	SELECT 	fiscal_year, 
+    		sales_employee,
+    		sale,
+    		SUM(sale) OVER (PARTITION BY fiscal_year) total_sales
+	FROM
+    	sales;
+
+	# Note that window functions are performed on the result set after all JOIN, 
+	# WHERE, GROUP BY, and HAVING clauses and before the ORDER BY, 
+	# LIMIT and SELECT DISTINCT
+
+	# windows function syntax
+	window_function_name(expression) OVER ( 
+   	[partition_defintion]
+   	[order_definition]
+   	[frame_definition]
+	)
+
+	
+4. MATH FUNCTION
+
+	Name	Description
+	ABS()	Returns the absolute value of a number
+	CEIL()	Returns the smallest integer value greater than or equal to the input number (n).
+	FLOOR()	Returns the largest integer value not greater than the argument
+	MOD()	Returns the remainder of a number divided by another
+	ROUND()	Rounds a number to a specified number of decimal places.
+	TRUNCATE()	Truncates a number to a specified number of decimal places
+	ACOS(n)	Returns the arc cosine of n or null if n is not in the range -1 and 1.
+	ASIN(n)	Returns the arcsine of n which is the value whose sine is n. It returns null if n is not in the range -1 to 1.
+	ATAN()	Returns the arctangent of n.
+	ATAN2(n,m), ATAN(m,n)	Returns the arctangent of the two variables n and m
+	CONV(n,from_base,to_base)	Converts a number between different number bases
+	COS(n)	Returns the cosine of n, where n is in radians
+	COT(n)	Returns the cotangent of n.
+	CRC32()	Computes a cyclic redundancy check value and returns a 32-bit unsigned value
+	DEGREES(n)	Converts radians to degrees of the argument n
+	EXP(n)	Raises to the power of e raised to the power of n
+	LN(n)	Returns the natural logarithm of n
+	LOG(n)	Returns the natural logarithm of the first argument
+	LOG10()	Returns the base-10 logarithm of the argument
+	LOG2()	Returns the base-2 logarithm of the argument
+	PI()	Returns the value of PI
+	POW()	Returns the argument raised to the specified power
+	POWER()	Returns the argument raised to the specified power
+	RADIANS()	Returns argument converted to radians
+	RAND()	Returns a random floating-point value
+	SIGN(n)	Returns the sign of n that can be -1, 0, or 1 depending on whether n is negative, zero, or positive.
+	SIN(n)	Returns the sine of n
+	SQRT(n)	Returns the square root of n
+	TAN(n)	Returns the tangent of n
+
+5. STRING FUNCTION
+	Name	Description
+	CONCAT	Concatenate two or more strings into a single string
+	INSTR	Return the position of the first occurrence of a substring in a string
+	LENGTH	Get the length of a string in bytes and in characters
+	LEFT	Get a specified number of leftmost characters from a string
+	LOWER	Convert a string to lowercase
+	LTRIM	Remove all leading spaces from a string
+	REPLACE	Search and replace a substring in a string
+	RIGHT	Get a specified number of rightmost characters from a string
+	RTRIM	Remove all trailing spaces from a string
+	SUBSTRING	Extract a substring starting from a position with a specific length.
+	SUBSTRING_INDEX	Return a substring from a string before a specified number of occurrences of a delimiter
+	TRIM	Remove unwanted characters from a string.
+	FIND_IN_SET	Find a string within a comma-separated list of strings
+	FORMAT	Format a number with a specific locale, rounded to the number of decimals
+	UPPER	Convert a string to uppercase
+
+6. DATE FUNCTION
+	Function	Description
+	CURDATE	Returns the current date.
+	DATEDIFF	Calculates the number of days between two DATE values.
+	DAY	Gets the day of the month of a specified date.
+	DATE_ADD	Adds a time value to date value.
+	DATE_SUB	Subtracts a time value from a date value.
+	DATE_FORMAT	Formats a date value based on a specified date format.
+	DAYNAME	Gets the name of a weekday for a specified date.
+	DAYOFWEEK	Returns the weekday index for a date.
+	EXTRACT	Extracts a part of a date.
+	LAST_DAY	Returns the last day of the month of a specified date
+	NOW	Returns the current date and time at which the statement executed.
+	MONTH	Returns an integer that represents a month of a specified date.
+	STR_TO_DATE	Converts a string into a date and time value based on a specified format.
+	SYSDATE	Returns the current date.
+	TIMEDIFF	Calculates the difference between two TIME or DATETIME values.
+	TIMESTAMPDIFF	Calculates the difference between two DATE or DATETIME values.
+	WEEK	Returns a week number of a date.
+	WEEKDAY	Returns a weekday index for a date.
+	YEAR	Return the year for a specified date
+
+7. REGEX
+	Pattern	What the pattern matches
+^	Beginning of string
+$	End of string
+.	Any single character
+[...]	Any character listed between the square brackets
+[^...]	Any character not listed between the square brackets
+p1|p2|p3	Alternation; matches any of the patterns p1, p2, or p3
+*	Zero or more instances of preceding element
++	One or more instances of preceding element
+{n}	n instances of preceding element
+{m,n}	m through n instances of preceding element
+
+8. ADVANCED FUNCTION
+
+	Function	Description
+BIN	Returns a binary representation of a number
+BINARY	Converts a value to a binary string
+CASE	Goes through conditions and return a value when the first condition is met
+CAST	Converts a value (of any type) into a specified datatype
+COALESCE	Returns the first non-null value in a list
+CONNECTION_ID	Returns the unique connection ID for the current connection
+CONV	Converts a number from one numeric base system to another
+CONVERT	Converts a value into the specified datatype or character set
+CURRENT_USER	Returns the user name and host name for the MySQL account that the server used to authenticate the current client
+DATABASE	Returns the name of the current database
+IF	Returns a value if a condition is TRUE, or another value if a condition is FALSE
+IFNULL	Return a specified value if the expression is NULL, otherwise return the expression
+ISNULL	Returns 1 or 0 depending on whether an expression is NULL
+LAST_INSERT_ID	Returns the AUTO_INCREMENT id of the last row that has been inserted or updated in a table
+NULLIF	Compares two expressions and returns NULL if they are equal. Otherwise, the first expression is returned
+SESSION_USER	Returns the current MySQL user name and host name
+SYSTEM_USER	Returns the current MySQL user name and host name
+USER	Returns the current MySQL user name and host name
+VERSION	Returns the current version of the MySQL database
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
