@@ -73,6 +73,7 @@
 	WHERE amount IN (0.99,1.98,1.99) # 0.99 or 1.98 or 1.99
 	# can input NOT IN
 
+
 9. LIKE and ILIKE
 	# pattern matching
 	# (%) sequence of character
@@ -82,9 +83,9 @@
 	SELECT * FROM customer
 	WHERE first_name LIKE '_her%'; # queried data that start with 1 char plus her plus 
 				       # blablabla
-	
 
-10. GENERAL CHALLANGE 1
+
+10. GENERAL CHALLENGE 1
 	# how many payment transactions were greater than $5.00?
 	SELECT COUNT(*) FROM PAYMENT
 	WHERE amount>5;
