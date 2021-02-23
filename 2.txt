@@ -77,12 +77,14 @@
 					# film cannot be found in film table
 
 	
-6. UNION
+6. UNION/UNION ALL
 	# combine result set of two or more SELECT statement
 	# concatenate => paste table_B below table_A
-	SELECT * FROM table_A
+	SELECT City FROM table_A
 	UNION
-	SELECT * FROM table_B
+	SELECT City FROM table_B
+	ORDER BY City
+	# UNION ALL will allow duplication on both tables
 
 
 7. JOIN challenge
@@ -159,6 +161,8 @@
 	SELECT upper(first_name)||' '||upper(last_name) AS full_name
 	FROM customer
 	
+	SELECT CONCAT(first_name,' ',last_name) FROM customer
+	
 	# making email address
 	SELECT LOWER(LEFT(first_name,1)) || lower(last_name) || '@gmail.com' 
 	As email_address
@@ -226,7 +230,7 @@
 	membercost < (monthlymaintenance/50)
 	ORDER BY facid
 	
-	# how ca you produce a list of all facilities with the word 'TENNIS'
+	# how can you produce a list of all facilities with the word 'TENNIS'
 	SELECT * FROM cd.facilities
 	WHERE name ILIKE '%tennis%'
 
