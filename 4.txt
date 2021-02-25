@@ -99,7 +99,7 @@
 	C	200	10
 
 	# create column final = price-discount
-	SELECT item,price-column AS final # wont work for item B
+	SELECT item,price-discount AS final # wont work for item B
 	FROM table
 	
 	# it should be
